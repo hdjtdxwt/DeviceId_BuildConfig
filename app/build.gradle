@@ -1,0 +1,111 @@
+apply plugin: 'com.android.application'
+def releaseTime() {
+    return new Date().format("yyyy-MM-dd-HH", TimeZone.getTimeZone("UTC"))
+}
+android {
+    compileSdkVersion 26
+    buildToolsVersion "26.0.2"
+    defaultConfig {
+        applicationId "com.epsit.myapplication"
+        minSdkVersion 19
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        productFlavors {
+            devEnveriment {
+                buildConfigField('String', 'BUILD_ENV_TYPE', '"dev"')
+                buildConfigField('String', 'BASE_URL', '"http://dev.domain.com"')
+            }
+            proEnveriment {
+                buildConfigField('String', 'BUILD_ENV_TYPE', '"pro"')
+                buildConfigField('String', 'BASE_URL', '"http://pro.domain.com"')
+            }
+        }
+
+    }
+    //签名
+    signingConfigs {
+        debug {
+            storeFile file("F:\\robot\\test\\DeviceId\\app\\keystore.jks")
+            storePassword "Eps123456"
+            keyAlias "DeviceIdDemo"
+            keyPassword "Eps123456"
+        }
+        release {// 自己的签名文件
+            storeFile file("F:\\robot\\test\\DeviceId\\app\\keystore.jks")
+            storePassword "Eps123456"
+            keyAlias "DeviceIdDemo"
+            keyPassword "Eps123456"
+        }
+    }
+
+    buildTypes {
+        debug {
+            // 显示Log
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+            versionNameSuffix "-debug"
+            minifyEnabled false
+            zipAlignEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.debug
+        }
+
+        release {
+            //混淆
+            minifyEnabled true//ture之后，a
+            //Zipalign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources true //改成true会报错 intermediates\res\resources-release-stripped.ap_' specified for property 'resourceFile' does not exist.
+            //前一部分代表系统默认的android程序的混淆文件，该文件已经包含了基本的混淆声明，后一个文件是自己的定义混淆文件
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //签名
+            signingConfig signingConfigs.release
+
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                        // 输出apk名称为app_v1.0_2015-xx-xx_xxxx.apk
+                        //def fileName = "app_v${defaultConfig.versionName}_${releaseTime()}.apk"
+                        def fileName = "app_c${defaultConfig.versionCode}v${defaultConfig.versionName}_${releaseTime()}.apk"
+                        output.outputFile = new File(outputFile.parent, fileName)
+                    }
+                }
+            }
+        }
+    }
+    /*buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }*/
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:26.+'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'junit:junit:4.12'
+
+    compile 'io.reactivex:rxjava:1.1.0'
+    compile 'io.reactivex:rxandroid:1.1.0'
+    compile 'com.squareup.retrofit2:retrofit:2.0.2'
+    //compile 'com.squareup.okhttp3:logging-interceptor:3.1.2'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.2'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.0.2'
+    compile 'com.google.code.gson:gson:2.4'
+    compile 'com.alibaba:fastjson:1.2.38'
+    compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.7'
+    compile 'com.android.support:multidex:1.0.0'
+    compile 'org.greenrobot:eventbus:3.0.0'
+    compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'com.bm.photoview:library:1.4.1'
+    compile 'org.litepal.android:core:1.6.0'
+}
